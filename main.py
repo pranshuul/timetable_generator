@@ -77,42 +77,48 @@ def index():
 
         ui.separator()
 
-        # 2. Search
-        with ui.row().classes("w-full items-center gap-2"):
-            ui.icon("search").classes("text-xl md:text-2xl text-gray-400")
+        # 2. Search Area
+        with ui.row().classes("w-full gap-2 items-center"):
+            # Input Field (grows to fill space)
             search_field = (
                 ui.input(placeholder="Search courses...")
-                .classes("w-full text-md md:text-lg")
+                .classes("flex-grow text-md")
                 .props("outlined rounded-lg clearable dense")
             )
-        search_button = ui.button("Search").classes("h-10")
+            # Decorate input with icon
+            with search_field.add_slot("prepend"):
+                ui.icon("search").classes("text-gray-400")
 
-        # 3. Lists (Collapsible)
-        with ui.row().classes("w-full gap-4 md:gap-6 items-start"):
+            # Discrete Manual Search Button
+            search_btn = (
+                ui.button("Search")
+                .props("unelevated color=primary text-color=white")
+                .classes("h-10 px-6 rounded-lg font-bold shadow-sm")
+            )
+
+        # 3. Lists (Responsive & Full Width)
+        with ui.row().classes("w-full gap-4 md:gap-6 items-start wrap"):
 
             def list_col(title, icon, color):
-                # Use ui.expansion for collapsibility
-                # We apply the width classes here (w-full on mobile, 31% on desktop)
+                # LAYOUT FIX:
+                # w-full: Full width on mobile (stacks vertically)
+                # md:flex-1: Flex grow on desktop (shares width equally)
+                # min-w-0: Prevents flex child from overflowing container
                 with (
                     ui.expansion(title, icon=icon, value=True)
-                    .classes(f"w-full md:w-[31%] border rounded-lg {color}")
+                    .classes(f"w-full md:flex-1 min-w-0 border rounded-lg {color}")
                     .props("header-class='font-bold text-md'") as exp
                 ):
-                    # We add a separator to visually divide header from content like before
                     ui.separator().classes("mb-1")
-
-                    # The scroll area now lives inside the expansion
                     with ui.scroll_area().classes("w-full h-[400px] md:h-[600px] p-2"):
                         content = ui.column().classes("w-full gap-2")
-
-                # Return content column (to add cards) and expansion (to update count/title)
                 return content, exp
 
             col_avail, exp_avail = list_col("Available", "list", "bg-gray-50")
             col_sel, exp_sel = list_col("Selected", "check_circle", "bg-blue-50")
             col_conf, exp_conf = list_col("Conflicting", "block", "bg-red-50")
 
-    # --- Footer --- test
+    # --- Footer ---
     with ui.footer().classes("bg-white border-t border-gray-200 p-3 md:p-4 z-50"):
         with ui.column().classes("w-full items-center justify-center gap-1"):
             ui.label(f"© {date.today().year} Pranshul Shenoy, IIIT").classes(
@@ -141,7 +147,6 @@ def index():
         count_sel = 0
         count_conf = 0
 
-        # Sort keys by course name
         sorted_ids = sorted(
             course_cards.keys(), key=lambda k: scheduler.all_courses[k]["name"]
         )
@@ -177,7 +182,6 @@ def index():
                 )
                 count_avail += 1
 
-        # Update Expansion Titles with Counts
         exp_avail.text = f"Available ({count_avail})"
         exp_sel.text = f"Selected ({count_sel})"
         exp_conf.text = f"Conflicting ({count_conf})"
@@ -235,8 +239,11 @@ def index():
 
         course_cards[cid] = card
 
+    # Bind Events
     search_field.on_value_change(refresh_ui)
-    search_button.on_click(refresh_ui)
+    search_btn.on_click(refresh_ui)  # Manual Trigger
+
+    # Trigger initial load
     refresh_ui()
 
 
