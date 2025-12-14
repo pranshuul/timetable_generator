@@ -5,6 +5,11 @@ from datetime import date
 from nicegui import ui
 
 from src.generators import generate_ics_string, generate_pdf_bytes
+from src.program_defaults import (
+    BRANCH_OPTIONS,
+    YEAR_OPTIONS,
+    get_compulsory_courses,
+)
 from src.scheduler import Scheduler
 from src.scraper import get_course_data
 from src.ui_components import TimetableGrid
@@ -94,6 +99,96 @@ def index():
                 ui.button("Search")
                 .props("unelevated color=primary text-color=white")
                 .classes("h-10 px-6 rounded-lg font-bold shadow-sm")
+            )
+
+        # 2b. Program Presets
+        with ui.row().classes(
+            "w-full gap-3 items-center flex-wrap bg-white/80 rounded-xl border border-gray-200 p-3"
+        ):
+            year_select = (
+                ui.select(
+                    YEAR_OPTIONS,
+                    label="Year",
+                )
+                .props("outlined dense placeholder='Select year'")
+                .classes("min-w-[120px]")
+            )
+
+            branch_select = (
+                ui.select(
+                    BRANCH_OPTIONS,
+                    label="Branch",
+                )
+                .props("outlined dense placeholder='Select branch'")
+                .classes("min-w-[140px]")
+            )
+
+            def auto_select_compulsory():
+                year = year_select.value
+                branch = branch_select.value
+
+                if not year or not branch:
+                    return ui.notify(
+                        "Choose both year and branch first.", type="warning"
+                    )
+
+                course_ids = get_compulsory_courses(year, branch)
+                if not course_ids:
+                    return ui.notify(
+                        f"No compulsory courses configured for {year} {branch} yet.",
+                        type="warning",
+                    )
+
+                added = []
+                missing = []
+                for cid in course_ids:
+                    course = scheduler.all_courses.get(cid)
+                    if not course:
+                        missing.append(cid)
+                        continue
+
+                    if cid not in scheduler.selected_ids:
+                        scheduler.selected_ids.add(cid)
+                        added.append(course["name"])
+
+                if added:
+                    refresh_ui()
+                    ui.notify(
+                        f"Loaded {len(added)} compulsory courses for {year} {branch}.",
+                        type="positive",
+                    )
+                else:
+                    ui.notify(
+                        "All compulsory courses were already selected.",
+                        type="info",
+                    )
+
+                if missing:
+                    ui.notify(
+                        "Missing course data: " + ", ".join(missing),
+                        type="warning",
+                    )
+
+            def clear_selection():
+                if not scheduler.selected_ids:
+                    return ui.notify("No courses are selected.", type="info")
+                scheduler.selected_ids.clear()
+                refresh_ui()
+                ui.notify("Selection cleared.", type="positive")
+
+            ui.button(
+                "Autofill Compulsory",
+                on_click=auto_select_compulsory,
+                icon="playlist_add_check",
+            ).props("unelevated color=positive text-color=white").classes(
+                "h-11 px-6 font-semibold shadow-sm"
+            )
+            ui.button(
+                "Clear Selection",
+                on_click=clear_selection,
+                icon="delete_sweep",
+            ).props("unelevated color=negative text-color=white").classes(
+                "h-11 px-6 font-semibold shadow-sm"
             )
 
         # 3. Lists (Responsive & Full Width)
