@@ -102,11 +102,11 @@
         "sessions": [
             {
                 "day": "Tue",
-                "slot": 2
+                "slot": 4
             },
             {
                 "day": "Fri",
-                "slot": 2
+                "slot": 4
             }
         ]
     },
@@ -144,7 +144,16 @@
         "id": "Arts-2",
         "name": "Arts-2",
         "half": "BOTH",
-        "sessions": []
+        "sessions": [
+            {
+                "day": "Wed",
+                "slot": 2
+            },
+            {
+                "day": "Sat",
+                "slot": 2
+            }
+        ]
     },
     {
         "id": "Basics of Ethics",
@@ -377,12 +386,12 @@
         "half": "H2",
         "sessions": [
             {
-                "day": "Tue",
-                "slot": 1
+                "day": "Mon",
+                "slot": 3
             },
             {
-                "day": "Fri",
-                "slot": 1
+                "day": "Thu",
+                "slot": 3
             }
         ]
     },
@@ -607,7 +616,7 @@
     {
         "id": "Engineering Virtual Reality Systems",
         "name": "Engineering Virtual Reality Systems",
-        "half": "H2",
+        "half": "BOTH",
         "sessions": [
             {
                 "day": "Tue",
@@ -832,11 +841,11 @@
         "sessions": [
             {
                 "day": "Tue",
-                "slot": 4
+                "slot": 6
             },
             {
                 "day": "Fri",
-                "slot": 4
+                "slot": 6
             }
         ]
     },
@@ -888,7 +897,7 @@
     {
         "id": "Introduction to Human Sciences",
         "name": "Introduction to Human Sciences",
-        "half": "BOTH",
+        "half": "H2",
         "sessions": [
             {
                 "day": "Mon",
@@ -1091,7 +1100,7 @@
     {
         "id": "Introduction to UAV Design",
         "name": "Introduction to UAV Design",
-        "half": "H1",
+        "half": "BOTH",
         "sessions": [
             {
                 "day": "Tue",
@@ -1532,7 +1541,7 @@
     {
         "id": "Principles of Information Security",
         "name": "Principles of Information Security",
-        "half": "H1",
+        "half": "BOTH",
         "sessions": [
             {
                 "day": "Tue",
@@ -1728,7 +1737,7 @@
     {
         "id": "Software Engineering",
         "name": "Software Engineering",
-        "half": "H1",
+        "half": "BOTH",
         "sessions": [
             {
                 "day": "Tue",
@@ -1885,16 +1894,8 @@
                 "slot": 1
             },
             {
-                "day": "Tue",
-                "slot": 6
-            },
-            {
                 "day": "Thu",
                 "slot": 1
-            },
-            {
-                "day": "Fri",
-                "slot": 6
             }
         ]
     },
@@ -1949,12 +1950,12 @@
         "half": "BOTH",
         "sessions": [
             {
-                "day": "Tue",
-                "slot": 3
+                "day": "Mon",
+                "slot": 4
             },
             {
-                "day": "Fri",
-                "slot": 3
+                "day": "Thu",
+                "slot": 4
             }
         ]
     },

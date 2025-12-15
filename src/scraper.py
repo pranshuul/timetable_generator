@@ -23,6 +23,7 @@ class CourseScraper:
     # --- CONFIGURATION: Force specific Semester-Half metadata ---
     HALF_OVERRIDES = {
         "INFORMATION AND COMMUNICATION": "BOTH",
+        "ENGINEERING VIRTUAL REALITY SYSTEMS": "BOTH",
     }
 
     # --- CONFIGURATION: Specific typo fixes (Courses PDF side) ---
