@@ -28,13 +28,28 @@ def index():
     scheduler = Scheduler(courses_data)
     course_cards = {}
 
+    # Theme state
+    dark_mode = {"enabled": False}
+
     # --- Header ---
-    with ui.header().classes(
-        "items-center justify-between bg-white text-gray-800 shadow-md px-4 py-3 md:px-6"
-    ):
+    header = ui.header().classes(
+        "items-center justify-between shadow-md px-4 py-3 md:px-6"
+    )
+
+    with header:
         ui.label("IIIT-H Timetable").classes("text-lg md:text-xl font-bold truncate")
 
         with ui.row().classes("items-center gap-2"):
+            # Theme Toggle
+            def toggle_theme():
+                dark_mode["enabled"] = not dark_mode["enabled"]
+                apply_theme()
+
+            theme_btn = ui.button(
+                icon="dark_mode" if not dark_mode["enabled"] else "light_mode",
+                on_click=toggle_theme
+            ).props("flat round dense").classes("text-sm")
+
             # Downloads
             async def dl_pdf():
                 flat = scheduler.get_selected_courses_flat()
@@ -42,7 +57,8 @@ def index():
                     return ui.notify("Select courses first!", type="warning")
                 try:
                     b64 = base64.b64encode(generate_pdf_bytes(flat)).decode()
-                    ui.download(f"data:application/pdf;base64,{b64}", "timetable.pdf")
+                    ui.download(
+                        f"data:application/pdf;base64,{b64}", "timetable.pdf")
                 except Exception as e:
                     ui.notify(f"Error: {e}", type="negative")
 
@@ -51,8 +67,10 @@ def index():
                 if not flat:
                     return ui.notify("Select courses first!", type="warning")
                 try:
-                    b64 = base64.b64encode(generate_ics_string(flat).encode()).decode()
-                    ui.download(f"data:text/calendar;base64,{b64}", "schedule.ics")
+                    b64 = base64.b64encode(
+                        generate_ics_string(flat).encode()).decode()
+                    ui.download(
+                        f"data:text/calendar;base64,{b64}", "schedule.ics")
                 except Exception as e:
                     ui.notify(f"Error: {e}", type="negative")
 
@@ -64,18 +82,22 @@ def index():
             ).classes("text-sm")
 
     # --- Content ---
-    with ui.column().classes(
+    content_col = ui.column().classes(
         "w-full max-w-[1400px] mx-auto p-2 md:p-4 gap-4 md:gap-6 mb-24"
-    ):
+    )
+
+    with content_col:
         # 1. Preview
-        with ui.card().classes("w-full p-2 md:p-4 shadow-sm border border-gray-200"):
-            ui.label("Timetable Preview").classes("text-md md:text-lg font-bold mb-2")
+        preview_card = ui.card().classes("w-full p-2 md:p-4 shadow-sm")
+        with preview_card:
+            preview_label = ui.label("Timetable Preview").classes(
+                "text-md md:text-lg font-bold mb-2")
             with ui.element("div").classes("w-full overflow-x-auto"):
                 with ui.element("div").classes("min-w-[800px]"):
                     grid = TimetableGrid()
                     grid.render()
 
-        ui.separator()
+        separator1 = ui.separator()
 
         # 2. Search Area
         with ui.row().classes("w-full gap-2 items-center"):
@@ -87,7 +109,7 @@ def index():
             )
             # Decorate input with icon
             with search_field.add_slot("prepend"):
-                ui.icon("search").classes("text-gray-400")
+                search_icon = ui.icon("search").classes("text-gray-400")
 
             # Discrete Manual Search Button
             search_btn = (
@@ -109,22 +131,26 @@ def index():
                     .classes(f"w-full md:flex-1 min-w-0 border rounded-lg {color}")
                     .props("header-class='font-bold text-md'") as exp
                 ):
-                    ui.separator().classes("mb-1")
+                    sep = ui.separator().classes("mb-1")
                     with ui.scroll_area().classes("w-full h-[400px] md:h-[600px] p-2"):
                         content = ui.column().classes("w-full gap-2")
-                return content, exp
+                return content, exp, sep
 
-            col_avail, exp_avail = list_col("Available", "list", "bg-gray-50")
-            col_sel, exp_sel = list_col("Selected", "check_circle", "bg-blue-50")
-            col_conf, exp_conf = list_col("Conflicting", "block", "bg-red-50")
+            col_avail, exp_avail, sep_avail = list_col(
+                "Available", "list", "bg-gray-50")
+            col_sel, exp_sel, sep_sel = list_col(
+                "Selected", "check_circle", "bg-blue-50")
+            col_conf, exp_conf, sep_conf = list_col(
+                "Conflicting", "block", "bg-red-50")
 
     # --- Footer ---
-    with ui.footer().classes("bg-white border-t border-gray-200 p-3 md:p-4 z-50"):
+    footer = ui.footer().classes("border-t p-3 md:p-4 z-50")
+    with footer:
         with ui.column().classes("w-full items-center justify-center gap-1"):
-            ui.label(f"© {date.today().year} Pranshul Shenoy, IIIT").classes(
-                "text-xs md:text-sm text-gray-500 font-medium"
+            footer_label = ui.label(f"© {date.today().year} Pranshul Shenoy, IIIT").classes(
+                "text-xs md:text-sm font-medium"
             )
-            with ui.row().classes("gap-4 text-xs md:text-sm text-gray-400"):
+            with ui.row().classes("gap-4 text-xs md:text-sm") as footer_links:
                 ui.link(
                     "Report Issue",
                     "https://github.com/pranshuul/timetable_generator/issues",
@@ -135,6 +161,80 @@ def index():
                 ).classes("hover:text-primary transition-colors")
 
     # --- Logic ---
+    def apply_theme():
+        """Apply theme colors based on dark_mode state"""
+        is_dark = dark_mode["enabled"]
+
+        # Update page background
+        ui.query('body').classes(
+            'bg-gray-900 text-gray-100' if is_dark else 'bg-white text-gray-900',
+            remove='bg-gray-900 text-gray-100 bg-white text-gray-900'
+        )
+
+        # Update header
+        header.classes(
+            'bg-gray-800 text-gray-100' if is_dark else 'bg-white text-gray-800',
+            remove='bg-gray-800 text-gray-100 bg-white text-gray-800'
+        )
+
+        # Update footer
+        footer.classes(
+            'bg-gray-800 border-gray-700' if is_dark else 'bg-white border-gray-200',
+            remove='bg-gray-800 border-gray-700 bg-white border-gray-200'
+        )
+        footer_label.classes(
+            'text-gray-400' if is_dark else 'text-gray-500',
+            remove='text-gray-400 text-gray-500'
+        )
+        footer_links.classes(
+            'text-gray-400' if is_dark else 'text-gray-400'
+        )
+
+        # Update preview card
+        preview_card.classes(
+            'bg-gray-800 border-gray-700' if is_dark else 'bg-white border-gray-200',
+            remove='bg-gray-800 border-gray-700 bg-white border-gray-200'
+        )
+        preview_label.classes(
+            'text-gray-100' if is_dark else 'text-gray-900',
+            remove='text-gray-100 text-gray-900'
+        )
+
+        # Update separators
+        separator1.classes(
+            'bg-gray-700' if is_dark else 'bg-gray-200',
+            remove='bg-gray-700 bg-gray-200'
+        )
+
+        # Update search icon
+        search_icon.classes(
+            'text-gray-500' if is_dark else 'text-gray-400',
+            remove='text-gray-500 text-gray-400'
+        )
+
+        # Update list expansions
+        exp_avail.classes(
+            'bg-gray-800 border-gray-700' if is_dark else 'bg-gray-50 border-gray-200',
+            remove='bg-gray-800 border-gray-700 bg-gray-50 border-gray-200'
+        )
+        exp_sel.classes(
+            'bg-blue-900 border-blue-800' if is_dark else 'bg-blue-50 border-gray-200',
+            remove='bg-blue-900 border-blue-800 bg-blue-50 border-gray-200'
+        )
+        exp_conf.classes(
+            'bg-red-900 border-red-800' if is_dark else 'bg-red-50 border-gray-200',
+            remove='bg-red-900 border-red-800 bg-red-50 border-gray-200'
+        )
+
+        # Update theme button icon
+        theme_btn.props(f"icon={'light_mode' if is_dark else 'dark_mode'}")
+
+        # Update grid theme
+        grid.set_theme(is_dark)
+
+        # Refresh card styling
+        refresh_ui()
+
     def refresh_ui():
         # Get flattened schedule for grid
         grid.update(scheduler.get_selected_courses_flat())
@@ -142,6 +242,7 @@ def index():
         sel_ids = scheduler.selected_ids
         conf_ids = scheduler.get_conflicting_ids()
         query = search_field.value.lower() if search_field.value else ""
+        is_dark = dark_mode["enabled"]
 
         count_avail = 0
         count_sel = 0
@@ -162,24 +263,42 @@ def index():
 
             if cid in sel_ids:
                 card.move(col_sel)
-                card.classes(
-                    "bg-blue-100 border-blue-500 hover:bg-blue-200",
-                    remove="bg-white bg-red-100 border-transparent border-red-300 opacity-60 hover:bg-gray-100 cursor-not-allowed",
-                )
+                if is_dark:
+                    card.classes(
+                        "bg-blue-900 border-blue-700 hover:bg-blue-800",
+                        remove="bg-white bg-blue-100 bg-red-100 bg-red-900 bg-gray-800 border-transparent border-blue-500 border-red-300 border-red-800 border-gray-700 opacity-60 opacity-75 hover:bg-gray-100 hover:bg-gray-700 hover:bg-blue-200 cursor-not-allowed",
+                    )
+                else:
+                    card.classes(
+                        "bg-blue-100 border-blue-500 hover:bg-blue-200",
+                        remove="bg-white bg-red-100 bg-red-900 bg-blue-900 bg-gray-800 border-transparent border-red-300 border-red-800 border-blue-700 border-gray-700 opacity-60 opacity-75 hover:bg-gray-100 hover:bg-gray-700 hover:bg-blue-800 cursor-not-allowed",
+                    )
                 count_sel += 1
             elif cid in conf_ids:
                 card.move(col_conf)
-                card.classes(
-                    "bg-red-100 border-red-300 opacity-75 cursor-not-allowed",
-                    remove="bg-white bg-blue-100 border-transparent border-blue-500 hover:bg-gray-100 hover:bg-blue-200",
-                )
+                if is_dark:
+                    card.classes(
+                        "bg-red-900 border-red-800 opacity-75 cursor-not-allowed",
+                        remove="bg-white bg-blue-100 bg-blue-900 bg-red-100 bg-gray-800 border-transparent border-blue-500 border-blue-700 border-red-300 border-gray-700 hover:bg-gray-100 hover:bg-gray-700 hover:bg-blue-200 hover:bg-blue-800",
+                    )
+                else:
+                    card.classes(
+                        "bg-red-100 border-red-300 opacity-75 cursor-not-allowed",
+                        remove="bg-white bg-blue-100 bg-blue-900 bg-red-900 bg-gray-800 border-transparent border-blue-500 border-blue-700 border-red-800 border-gray-700 hover:bg-gray-100 hover:bg-gray-700 hover:bg-blue-200 hover:bg-blue-800",
+                    )
                 count_conf += 1
             else:
                 card.move(col_avail)
-                card.classes(
-                    "bg-white border-transparent hover:bg-gray-100 hover:shadow",
-                    remove="bg-blue-100 bg-red-100 border-blue-500 border-red-300 opacity-60 opacity-75 cursor-not-allowed hover:bg-blue-200",
-                )
+                if is_dark:
+                    card.classes(
+                        "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:shadow",
+                        remove="bg-white bg-blue-100 bg-blue-900 bg-red-100 bg-red-900 border-transparent border-blue-500 border-blue-700 border-red-300 border-red-800 opacity-60 opacity-75 cursor-not-allowed hover:bg-gray-100 hover:bg-blue-200 hover:bg-blue-800",
+                    )
+                else:
+                    card.classes(
+                        "bg-white border-transparent hover:bg-gray-100 hover:shadow",
+                        remove="bg-blue-100 bg-blue-900 bg-red-100 bg-red-900 bg-gray-800 border-blue-500 border-blue-700 border-red-300 border-red-800 border-gray-700 opacity-60 opacity-75 cursor-not-allowed hover:bg-gray-700 hover:bg-blue-200 hover:bg-blue-800",
+                    )
                 count_avail += 1
 
         exp_avail.text = f"Available ({count_avail})"
@@ -201,8 +320,8 @@ def index():
         ) as card:
             card.on("click", lambda e, c=cid: on_click(c))
             with ui.column().classes("gap-1"):
-                ui.label(course["name"]).classes(
-                    "text-sm font-semibold leading-tight text-gray-800"
+                course_name = ui.label(course["name"]).classes(
+                    "text-sm font-semibold leading-tight"
                 )
 
                 if course["sessions"]:
@@ -217,7 +336,8 @@ def index():
                         }
                         sorted_sess = sorted(
                             course["sessions"],
-                            key=lambda x: (day_map.get(x["day"], 9), x["slot"]),
+                            key=lambda x: (day_map.get(
+                                x["day"], 9), x["slot"]),
                         )
 
                         for s in sorted_sess:
@@ -225,7 +345,8 @@ def index():
                                 "text-[10px] bg-gray-600 text-white px-1.5 py-0.5 rounded"
                             )
                 else:
-                    ui.label("No slots found").classes("text-[9px] text-red-500 italic")
+                    ui.label("No slots found").classes(
+                        "text-[9px] text-red-500 italic")
 
                 if course["half"] != "BOTH":
                     clr = (
@@ -243,7 +364,8 @@ def index():
     search_field.on_value_change(refresh_ui)
     search_btn.on_click(refresh_ui)  # Manual Trigger
 
-    # Trigger initial load
+    # Apply initial theme and trigger initial load
+    apply_theme()
     refresh_ui()
 
 
